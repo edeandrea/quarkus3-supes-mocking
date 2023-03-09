@@ -39,24 +39,24 @@ public Uni<Fighters> findRandomFighters() {
   var hero = findRandomHero()
     .onItem().ifNull().continueWith(this::createFallbackHero);
 
-	return Uni.combine()
-   	.all()
-		.unis(hero, villain)
-		.combinedWith(Fighters::new);
+  return Uni.combine()
+    .all()
+    .unis(hero, villain)
+    .combinedWith(Fighters::new);
 }
 
 @Fallback(fallbackMethod = "fallbackRandomHero")
 Uni<Hero> findRandomHero() {
   Log.debug("Finding a random hero");
-	return this.heroClient.findRandomHero()
-		.invoke(hero -> Log.debugf("Got random hero: %s", hero));
+  return this.heroClient.findRandomHero()
+    .invoke(hero -> Log.debugf("Got random hero: %s", hero));
 }
 
 @Fallback(fallbackMethod = "fallbackRandomVillain")
 Uni<Villain> findRandomVillain() {
   Log.debug("Finding a random villain");
-	return this.villainClient.findRandomVillain()
-		.invoke(villain -> Log.debugf("Got random villain: %s", villain));
+  return this.villainClient.findRandomVillain()
+    .invoke(villain -> Log.debugf("Got random villain: %s", villain));
 }
 ```
 
@@ -75,31 +75,31 @@ In [the test in `rest-fights-quarkus3/io.quarkus.sample.superheroes.fight.servic
 ```java
 @Test
 public void findRandomFightersNoneFound() {
-	PanacheMock.mock(Fight.class);
-	when(this.heroClient.findRandomHero())
-		.thenReturn(Uni.createFrom().nullItem());
+  PanacheMock.mock(Fight.class);
+  when(this.heroClient.findRandomHero())
+    .thenReturn(Uni.createFrom().nullItem());
 
-	when(this.villainClient.findRandomVillain())
-		.thenReturn(Uni.createFrom().nullItem());
+  when(this.villainClient.findRandomVillain())
+    .thenReturn(Uni.createFrom().nullItem());
 
-	var fighters = this.fightService.findRandomFighters()
-		.subscribe().withSubscriber(UniAssertSubscriber.create())
-		.assertSubscribed()
-		.awaitItem(Duration.ofSeconds(5))
-		.getItem();
+  var fighters = this.fightService.findRandomFighters()
+    .subscribe().withSubscriber(UniAssertSubscriber.create())
+    .assertSubscribed()
+    .awaitItem(Duration.ofSeconds(5))
+    .getItem();
 
-	assertThat(fighters)
-		.isNotNull()
-		.usingRecursiveComparison()
-		.isEqualTo(new Fighters(createFallbackHero(), createFallbackVillain()));
+  assertThat(fighters)
+    .isNotNull()
+    .usingRecursiveComparison()
+    .isEqualTo(new Fighters(createFallbackHero(), createFallbackVillain()));
 
-	verify(this.heroClient).findRandomHero();
-	verify(this.villainClient).findRandomVillain();
-	verify(this.fightService).findRandomHero();
-	verify(this.fightService).findRandomVillain();
-	verify(this.fightService, never()).fallbackRandomHero();
-	verify(this.fightService, never()).fallbackRandomVillain();
-	PanacheMock.verifyNoInteractions(Fight.class);
+  verify(this.heroClient).findRandomHero();
+  verify(this.villainClient).findRandomVillain();
+  verify(this.fightService).findRandomHero();
+  verify(this.fightService).findRandomVillain();
+  verify(this.fightService, never()).fallbackRandomHero();
+  verify(this.fightService, never()).fallbackRandomVillain();
+  PanacheMock.verifyNoInteractions(Fight.class);
 }
 ```
 
