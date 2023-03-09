@@ -498,8 +498,7 @@ class FightServiceTests {
 		var fight = this.fightService.performFight(createDefaultFighters())
 			.subscribe().withSubscriber(UniAssertSubscriber.create())
 			.assertSubscribed()
-      .awaitItem(Duration.ofMinutes(10))
-//			.awaitItem(Duration.ofSeconds(5))
+			.awaitItem(Duration.ofSeconds(5))
 			.getItem();
 
 		assertThat(fight)
