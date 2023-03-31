@@ -1,0 +1,46 @@
+name: Build and test
+
+on:
+  push:
+    paths-ignore:
+      - '**/*.md'
+    branches:
+      - main
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+    branches:
+      - main
+    paths-ignore:
+      - '**/*.md'
+
+concurrency:
+  group: "workflow = ${{ github.workflow }}, ref = ${{ github.event.ref }}, pr = ${{ github.event.pull_request.id }}"
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app:
+          - rest-fights-quarkus2
+          - rest-fights-quarkus3
+    name: build-test-${{ matrix.app }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: 17
+          distribution: temurin
+          cache: maven
+
+      - name: build-and-test
+        working-directory: ${{ matrix.app }}
+        run: ./mvnw -B clean verify -Dquarkus.http.host=0.0.0.0 -Dmaven.compiler.release=17
